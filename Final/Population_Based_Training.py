@@ -132,7 +132,7 @@ if __name__ == "__main__":
         "b2": tune.uniform(0.111,0.999),
         "batch_size": tune.randint(1,100)
     }
-    perturbation_interval = 10
+    perturbation_interval = 5
     pbt = PopulationBasedTraining(
         time_attr="training_iteration",
         perturbation_interval=perturbation_interval,
