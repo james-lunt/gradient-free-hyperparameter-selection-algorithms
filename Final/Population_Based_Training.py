@@ -81,13 +81,10 @@ class Cifar10Model(Trainable):
         self.train_data, self.test_data = self._read_data()
         x_train = self.train_data[0]
         model = self._build_model(x_train.shape[1:])
-        if self.config["opt"] == 'Adam':
-            opt = tf.keras.optimizers.Adam(
-                #lr=self.config.get("lr",0.0001), beta_1=self.config.get("b1", 0.9), beta_2=self.config.get("b2",0.999)
-                lr=self.config["lr"], beta_1=self.config["b1"], beta_2=self.config["b2"]
-            )
-        else:
-            opt = tf.keras.optimizers.SGD(self.config["lr"])
+        opt = tf.keras.optimizers.Adam(
+            #lr=self.config.get("lr",0.0001), beta_1=self.config.get("b1", 0.9), beta_2=self.config.get("b2",0.999)
+            lr=self.config["lr"], beta_1=self.config["b1"], beta_2=self.config["b2"]
+        )
 
         model.compile(
             loss="categorical_crossentropy", optimizer=opt, metrics=["accuracy"]
@@ -128,25 +125,23 @@ class Cifar10Model(Trainable):
 
 
 if __name__ == "__main__":
-
+    #Best hyperparameters: {"batch_size": 16, "beta_1": 0.727732325422385, "beta_2": 0.6829935115476067, "lr": 0.001, "opt": "adam"}
     space = {
         "epochs": 1,
-        "opt": tune.choice(["Adam","SGD"]),
-        "lr": tune.uniform(0.0001, 1),
+        "lr": tune.uniform(0.0008,0.0012),
         "b1": tune.uniform(0.1, 0.9),
-        "b2": tune.uniform(0.111,0.999),
-        "batch_size": tune.randint(1,100)
+        "b2": tune.uniform(0.6,0.76),
+        "batch_size": tune.randint(1,32)
     }
-    perturbation_interval = 5
+    perturbation_interval = 4
     pbt = PopulationBasedTraining(
         time_attr="training_iteration",
         perturbation_interval=perturbation_interval,
         hyperparam_mutations={
-            "opt": tune.choice(["Adam","SGD"]),
-            "lr": tune.uniform(0.0001, 1),
+            "lr": tune.uniform(0.0008,0.0012),
             "b1": tune.uniform(0.1, 0.9),
-            "b2": tune.uniform(0.111,0.999),
-            "batch_size": tune.randint(1,100)
+            "b2": tune.uniform(0.6,0.76),
+            "batch_size": tune.randint(1,32)
         },
     )
 
@@ -175,36 +170,14 @@ if __name__ == "__main__":
         ),
         param_space=space,
     )
-    results = tuner.fit()
-    print("Best hyperparameters found were: ", results.get_best_result().config)
-
-    import matplotlib.pyplot as plt
-    import os
+    import json
     import pandas as pd
-    # set display options to print full dataframe
-    pd.set_option('display.max_rows', None) 
-    pd.set_option('display.max_columns', None) 
-    pd.set_option('display.width', None) 
-
-    # Get the best trial result
-    best_result = results.get_best_result(metric="mean_accuracy", mode="max")
-    print(best_result)
-    all_runs = results.get_dataframe()
-    print(all_runs)
-
-    # Print `log_dir` where checkpoints are stored
-    print('Best result logdir:', best_result.log_dir)
-
-    # Print the best trial `config` reported at the last iteration
-    # NOTE: This config is just what the trial ended up with at the last iteration.
-    # See the next section for replaying the entire history of configs.
-    print('Best final iteration hyperparameter config:\n', best_result.config)
-
-    # Plot the learning curve for the best trial
-    df = best_result.metrics_dataframe
-    # Deduplicate, since PBT might introduce duplicate data
-    df = df.drop_duplicates(subset="training_iteration", keep="last")
-    df.plot("training_iteration", "mean_accuracy")
-    plt.xlabel("Training Iterations")
-    plt.ylabel("Test Accuracy")
-    plt.show()
+    for i in range(1):
+        results = tuner.fit()
+        best_result = results.get_best_result(metric="mean_accuracy", mode="max")
+        df = best_result.metrics_dataframe
+        df.to_csv(f'pbt_{i}_df_all')
+        df = all_runs = results.get_dataframe()
+        df.to_csv(f'pbt_{i}_df_best')
+        df = pd.DataFrame.from_dict(results.get_best_result().config)
+        df.to_csv(f'pbt_{i}_best_hyperparamaters')

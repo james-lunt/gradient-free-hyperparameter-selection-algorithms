@@ -41,11 +41,11 @@ y_train = keras.utils.to_categorical(y_train, num_classes)
 y_test = keras.utils.to_categorical(y_test, num_classes)
 
 param_grid = {
-    'batch_size': [16, 64, 128, 192, 256],
+    'batch_size': [8, 16, 64, 128],
     'opt': ["SGD","adam"],
     'lr': [1e-5,1e-4,1e-3,1e-2],
-    'beta_1': np.random.uniform(0,1,size=3),
-    'beta_2': np.random.uniform(0,1,size=3),
+    'beta_1': [0.3,0.6,0.9],
+    'beta_2': [0.333,0.666,0.999]
 }
 
 def create_model(opt,lr,beta_1,beta_2):
@@ -64,7 +64,7 @@ def create_model(opt,lr,beta_1,beta_2):
     model.compile(loss="categorical_crossentropy", optimizer=optimizer, metrics=["accuracy"])
     return model
 
-for i in range(2):
+for i in range(5):
     model = KerasClassifier(build_fn=create_model)
 
     # Create a GridSearchCV object
