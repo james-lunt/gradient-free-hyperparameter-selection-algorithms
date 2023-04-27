@@ -1,4 +1,3 @@
-
 import numpy as np
 import tensorflow as tf
 from tensorflow import keras
@@ -7,7 +6,6 @@ from keras.layers import Dense, Dropout, Activation, Flatten, BatchNormalization
 from keras.layers import Conv2D, MaxPooling2D, LeakyReLU
 from sklearn.metrics import confusion_matrix, classification_report
 from sklearn.utils import shuffle
-from keras.optimizers import Adam
 import matplotlib.pyplot as plt
 plt.rc('font', size=18)
 plt.rcParams['figure.constrained_layout.use'] = True
@@ -44,14 +42,12 @@ else:
 	model.add(Dropout(0.5))
 	model.add(Flatten())
 	model.add(Dense(num_classes, activation='softmax',kernel_regularizer=regularizers.l1(0.0001)))
-	#optimizer = Adam(learning_rate=0.001, beta_1=0.727732325422385, beta_2=0.6829935115476067)
-	optimizer = Adam(learning_rate=0.001, beta_1=0.9, beta_2=0.999)
-	model.compile(loss="categorical_crossentropy", optimizer=optimizer, metrics=["accuracy"])
+	model.compile(loss="categorical_crossentropy", optimizer='adam', metrics=["accuracy"])
 	model.summary()
 
 	batch_size = 128
 	epochs = 20
-	history = model.fit(x_train, y_train, batch_size=128, epochs=epochs, validation_split=0.1)
+	history = model.fit(x_train, y_train, batch_size=batch_size, epochs=epochs, validation_split=0.1)
 	model.save("cifar.model")
 	plt.subplot(211)
 	plt.plot(history.history['accuracy'])

@@ -81,10 +81,14 @@ class Cifar10Model(Trainable):
         self.train_data, self.test_data = self._read_data()
         x_train = self.train_data[0]
         model = self._build_model(x_train.shape[1:])
-        opt = tf.keras.optimizers.Adam(
-            #lr=self.config.get("lr",0.0001), beta_1=self.config.get("b1", 0.9), beta_2=self.config.get("b2",0.999)
-            lr=self.config["lr"], beta_1=self.config["b1"], beta_2=self.config["b2"]
-        )
+        if self.config["opt"] == 'Adam':
+            opt = tf.keras.optimizers.Adam(
+                #lr=self.config.get("lr",0.0001), beta_1=self.config.get("b1", 0.9), beta_2=self.config.get("b2",0.999)
+                lr=self.config["lr"], beta_1=self.config["b1"], beta_2=self.config["b2"]
+            )
+        else:
+            opt = tf.keras.optimizers.SGD(self.config["lr"])
+
         model.compile(
             loss="categorical_crossentropy", optimizer=opt, metrics=["accuracy"]
         )
@@ -127,6 +131,7 @@ if __name__ == "__main__":
 
     space = {
         "epochs": 1,
+        "opt": tune.choice(["Adam","SGD"]),
         "lr": tune.uniform(0.0001, 1),
         "b1": tune.uniform(0.1, 0.9),
         "b2": tune.uniform(0.111,0.999),
@@ -137,6 +142,7 @@ if __name__ == "__main__":
         time_attr="training_iteration",
         perturbation_interval=perturbation_interval,
         hyperparam_mutations={
+            "opt": tune.choice(["Adam","SGD"]),
             "lr": tune.uniform(0.0001, 1),
             "b1": tune.uniform(0.1, 0.9),
             "b2": tune.uniform(0.111,0.999),
