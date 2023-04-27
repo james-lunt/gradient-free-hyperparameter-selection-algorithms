@@ -95,10 +95,6 @@ def pattern_search_train(grid,grid_size,starting_point, alpha, gamma, num_iter,r
     coord = starting_point
     best_score = 0
     iteration_accuracies = []
-    eval_score_left = 0
-    eval_score_right = 0
-    eval_score_up = 0
-    eval_score_down = 0
     shrink_count = 0
 
     for i in range(num_iter):
@@ -171,6 +167,9 @@ def pattern_search_train(grid,grid_size,starting_point, alpha, gamma, num_iter,r
                 #What if has shrinked to the max?
                 print("Shrink")
 
+        if itr_best_score > best_score:
+           best_score = itr_best_score
+
     #print(grid[coord[0]][coord[1]])
     #print(best_score)
     return coord, grid[coord[0]][coord[1]], best_score, iteration_accuracies
@@ -184,10 +183,10 @@ beta_2 = [0.333, 0.666, 0.999]
 grid,grid_size = make_grid(batch_size,learning_rates,beta_1,beta_2)
 coord, hyperparameters, best_score, iteration_scores = pattern_search_train(
     grid,grid_size,
-    [5,11],
+    [3,7],
      alpha=2,
      gamma=1,
-     num_iter=10,
+     num_iter=5,
      report_metric='test_accuracy',
      stop_thr=2
      )
