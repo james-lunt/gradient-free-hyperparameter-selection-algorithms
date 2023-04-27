@@ -79,7 +79,7 @@ for i in range(5):
         file.write("Test set accuracy: {:.2f}\n".format(grid_search.score(x_test, y_test)))
 
     df = pd.DataFrame.from_dict(grid_search.cv_results_)
-    df.to_csv(f'grid_search_{i}_df')
+    df.to_csv(f'grid_search_{i}_df.csv')
 
 """print(df)
 plt.plot(df['mean_train_score'])

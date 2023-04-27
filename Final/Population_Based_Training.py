@@ -176,8 +176,19 @@ if __name__ == "__main__":
         results = tuner.fit()
         best_result = results.get_best_result(metric="mean_accuracy", mode="max")
         df = best_result.metrics_dataframe
-        df.to_csv(f'pbt_{i}_df_all')
-        df = all_runs = results.get_dataframe()
-        df.to_csv(f'pbt_{i}_df_best')
+        df.to_csv(f'pbt_{i}_df_best.csv')
+        df = all_runs = results.metric_dataframe()
+        df.to_csv(f'pbt_{i}_df_all.csv')
         df = pd.DataFrame.from_dict(results.get_best_result().config)
         df.to_csv(f'pbt_{i}_best_hyperparamaters')
+
+
+        ax = None
+        for result in results:
+            label = f"lr={result.config['lr']:.3f}, momentum={result.config['momentum']}"
+            if ax is None:
+                ax = result.metrics_dataframe.plot("training_iteration", "mean_accuracy", label=label)
+            else:
+                result.metrics_dataframe.plot("training_iteration", "mean_accuracy", ax=ax, label=label)
+        ax.set_title("Mean Accuracy vs. Training Iteration for All Trials")
+        ax.set_ylabel("Mean Test Accuracy")

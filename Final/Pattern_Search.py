@@ -90,50 +90,86 @@ def cnn_run(parameter_vector,report_metric):
         return train_accuracy
 
 #Alpha is the step size, gamma is shrink/grow size    
-def pattern_search_train(grid,grid_size,starting_point, alpha, gamma, num_iter,report_metric):
+def pattern_search_train(grid,grid_size,starting_point, alpha, gamma, num_iter,report_metric, stop_thr):
     #Initialise
     coord = starting_point
     best_score = 0
     iteration_accuracies = []
+    eval_score_left = 0
+    eval_score_right = 0
+    eval_score_up = 0
+    eval_score_down = 0
+    shrink_count = 0
 
     for i in range(num_iter):
+        if shrink_count > stop_thr:
+            break
+
         print("New center coord:")
         print(coord) 
+        print("alpha")
+        print(alpha)
         #If best parameters is the center point, Grow
         #If best parameters is a different point, Change center point to different point
         #If no improvement, Shrink
-        eval_score_center = cnn_run(grid[coord[0]][coord[1]], report_metric) 
-        eval_score_left = cnn_run(grid[coord[0]-alpha][coord[1]], report_metric) 
-        eval_score_right = cnn_run(grid[coord[0]+alpha][coord[1]], report_metric) 
-        eval_score_down = cnn_run(grid[coord[0]][coord[1]-alpha], report_metric) 
-        eval_score_up = cnn_run(grid[coord[0]][coord[1]+alpha], report_metric) 
 
-        scores = [eval_score_center,eval_score_left,eval_score_right,eval_score_down,eval_score_up]
-        itr_best_score = max(scores)
+        itr_best_score = 0
+        eval_score_center = cnn_run(grid[coord[0]][coord[1]], report_metric) 
+        if eval_score_center > itr_best_score:
+            itr_best_score = eval_score_center
+            move = 'stay'
+        if(coord[0]-alpha > 0):
+            eval_score_left = cnn_run(grid[coord[0]-alpha][coord[1]], report_metric)
+            if eval_score_left > itr_best_score:
+                itr_best_score = eval_score_left
+                move = 'left'
+        if (coord[0]+alpha < grid_size):
+            eval_score_right = cnn_run(grid[coord[0]+alpha][coord[1]], report_metric)
+            if eval_score_right > itr_best_score:
+                itr_best_score = eval_score_right
+                move = 'right'
+        if(coord[1]-alpha > 0): 
+            eval_score_down = cnn_run(grid[coord[0]][coord[1]-alpha], report_metric) 
+            if eval_score_down > itr_best_score:
+                itr_best_score = eval_score_down
+                move = 'down'
+        if(coord[1]+alpha < grid_size):
+            eval_score_up = cnn_run(grid[coord[0]][coord[1]+alpha], report_metric)
+            if eval_score_up > itr_best_score:
+                itr_best_score = eval_score_up
+                move = 'up'
+
         iteration_accuracies.append(itr_best_score)
 
         #Move
         #Make sure not greater or less than size of grid:
-        if (coord[0] < grid_size+alpha) and (coord[1] < grid_size+alpha):  
-            if itr_best_score == eval_score_left:
-                coord[0] -= alpha
-            if itr_best_score == eval_score_right:
-                coord[0] += alpha
-            if itr_best_score == eval_score_up:
-                coord[1] += alpha
-            if itr_best_score == eval_score_down:
-                coord[1] -= alpha
+        if move == 'left':
+            coord[0] -= alpha
+            print("Move left")
+        elif move == 'right':
+            coord[0] += alpha
+            print("Move right")
+        elif move == 'up':
+            coord[1] += alpha
+            print("Move up")
+        elif move == 'down':
+            coord[1] -= alpha
+            print("Move down")
 
-
-        #Grow
-        if itr_best_score > best_score:
-            best_score = itr_best_score
-            alpha *= gamma
-            print("Expand")
-        #Shrink
         else:
-            alpha /= gamma
-            print("Shrink")
+        #Grow
+            if itr_best_score > best_score:
+                best_score = itr_best_score
+                alpha += gamma
+                print("Expand")
+            #Shrink
+            else:
+                alpha -= gamma
+                if alpha == 0:
+                    alpha = 1
+                    shrink_count+=1
+                #What if has shrinked to the max?
+                print("Shrink")
 
     #print(grid[coord[0]][coord[1]])
     #print(best_score)
@@ -148,10 +184,13 @@ beta_2 = [0.333, 0.666, 0.999]
 grid,grid_size = make_grid(batch_size,learning_rates,beta_1,beta_2)
 coord, hyperparameters, best_score, iteration_scores = pattern_search_train(
     grid,grid_size,
-    [int(grid_size/2),
-     int(grid_size/2)],
-     1,2,2,
-     'test_accuracy')
+    [5,11],
+     alpha=2,
+     gamma=1,
+     num_iter=10,
+     report_metric='test_accuracy',
+     stop_thr=2
+     )
 
 print(coord)
 print(hyperparameters)
