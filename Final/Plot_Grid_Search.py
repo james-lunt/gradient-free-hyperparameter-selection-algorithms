@@ -43,6 +43,8 @@ def plot_mean_test_score(csv_files):
     # Display the plot
     plt.show()
 
-csv_files = ['grid_search_0_df.csv', 'grid_search_1_df.csv', 'grid_search_2_df.csv', 'grid_search_3_df.csv', 'grid_search_4_df.csv']
+csv_files = ['grid_search_0_df.csv', 'grid_search_1_df.csv',
+              'grid_search_2_df.csv',
+              'grid_search_3_df.csv', 'grid_search_4_df.csv']
 plot_mean_train_score(csv_files)
 plot_mean_test_score(csv_files)

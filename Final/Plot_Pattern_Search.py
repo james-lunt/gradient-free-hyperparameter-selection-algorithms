@@ -19,7 +19,6 @@ def plot_pattern_search_train(file_paths):
     plt.legend()
     plt.show()
 
-plot_pattern_search_train(['ps_data_0.txt','ps_data_1.txt'])
 
 def plot_pattern_search_test(file_paths):
     # Read the text file
@@ -40,4 +39,5 @@ def plot_pattern_search_test(file_paths):
     plt.legend()
     plt.show()
 
-plot_pattern_search_test(['ps_data_0.txt','ps_data_1.txt'])
+#plot_pattern_search_test(['ps_data_0.txt','ps_data_1.txt', 'ps_data_2.txt'])
+plot_pattern_search_train(['ps_data_train_1.txt','ps_data_train_2.txt','ps_data_train_3.txt'])

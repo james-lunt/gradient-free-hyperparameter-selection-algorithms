@@ -11,7 +11,6 @@ from keras.layers import Input, Dense, Dropout, Flatten
 from keras.layers import Convolution2D
 from keras import regularizers
 from keras.models import Model, load_model
-from keras.preprocessing.image import ImageDataGenerator
 
 from ray import air, tune
 from ray.tune import Trainable
@@ -153,7 +152,7 @@ if __name__ == "__main__":
         run_config=air.RunConfig(
             name="pbt_cifar10",
             stop={
-                "mean_accuracy": 0.65,
+                "mean_accuracy": 0.7,
                 "training_iteration": 20,
             },
             checkpoint_config=air.CheckpointConfig(
@@ -172,23 +171,29 @@ if __name__ == "__main__":
     )
     import json
     import pandas as pd
-    for i in range(1):
+    import matplotlib.pyplot as plt
+    i = 2
+    while i < 3:
         results = tuner.fit()
         best_result = results.get_best_result(metric="mean_accuracy", mode="max")
         df = best_result.metrics_dataframe
         df.to_csv(f'pbt_{i}_df_best.csv')
-        df = all_runs = results.metric_dataframe()
-        df.to_csv(f'pbt_{i}_df_all.csv')
-        df = pd.DataFrame.from_dict(results.get_best_result().config)
-        df.to_csv(f'pbt_{i}_best_hyperparamaters')
-
+        print(type(best_result.config))
+        with open(f'pbt_{i}_best_hyperparamaters','w') as file:
+            file.write(str(best_result.config))
+        #df = pd.DataFrame.from_dict(best_result.config)
+        #df.to_csv(f'pbt_{i}_best_hyperparamaters')
 
         ax = None
-        for result in results:
-            label = f"lr={result.config['lr']:.3f}, momentum={result.config['momentum']}"
+        for j,result in enumerate(results):
+            label = f"Instance {j}"
             if ax is None:
                 ax = result.metrics_dataframe.plot("training_iteration", "mean_accuracy", label=label)
             else:
                 result.metrics_dataframe.plot("training_iteration", "mean_accuracy", ax=ax, label=label)
-        ax.set_title("Mean Accuracy vs. Training Iteration for All Trials")
-        ax.set_ylabel("Mean Test Accuracy")
+        ax.set_title(f"Test Accuracy vs. Training Iteration for All Instances, Experiment {i}")
+        ax.set_ylabel("Test Accuracy")
+        ax.set_xlabel("Iteration")
+        plt.legend()
+        plt.show()
+        i+=1

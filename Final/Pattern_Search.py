@@ -59,14 +59,6 @@ def make_grid(batch_size,learning_rates,beta_1,beta_2):
 
     return parsed_grid,grid_size
 
-    """# Write the parsed grid to a CSV file
-    filename = "parsed_grid.csv"
-    with open(filename, mode="w", newline="") as file:
-        writer = csv.writer(file)
-        writer.writerows(parsed_grid)
-
-    print(f"CSV file '{filename}' has been created.")"""
-
 def cnn_run(parameter_vector,report_metric):
     with tf.device('/GPU:1'):
         batch_size,lr,beta_1,beta_2 = parameter_vector
@@ -100,6 +92,7 @@ def pattern_search_train(grid,grid_size,starting_point, alpha, gamma, num_iter,r
     shrink_count = 0
 
     for i in range(num_iter):
+        print("Iteration: " + str(i))
         if shrink_count > stop_thr:
             break
 
@@ -163,7 +156,7 @@ def pattern_search_train(grid,grid_size,starting_point, alpha, gamma, num_iter,r
             #Shrink
             else:
                 alpha -= gamma
-                if alpha == 0:
+                if alpha <= 0:
                     alpha = 1
                     shrink_count+=1
                 else:
@@ -184,8 +177,8 @@ learning_rates = [0.004,0.0008,0.001,0.0012,0.0016]
 beta_1 = [0.3,0.4,0.5,0.6,0.7]
 beta_2 = [0.7, 0.742, 0.784, 0.826, 0.867, 0.908, 0.95, 0.999]
 
-i = 1
-while i < 3:
+i = 3
+while i < 4:
     grid,grid_size = make_grid(batch_size,learning_rates,beta_1,beta_2)
     start_time = time.time()
     coord, hyperparameters, best_score, iteration_scores = pattern_search_train(
@@ -194,7 +187,7 @@ while i < 3:
         alpha=12,
         gamma=3,
         num_iter=20,
-        report_metric='test_accuracy',
+        report_metric='train_accuracy',
         stop_thr=3
         )
     end_time = time.time()
@@ -204,7 +197,7 @@ while i < 3:
     seconds = int(elapsed_time % 60)
 
 
-    with open(f'ps_data_{i}.txt', 'w') as file:
+    with open(f'ps_data_train_{i}.txt', 'w') as file:
         file.write("Coords: " + str(coord)+ '\n')
         file.write("Hyperparameters: " + str(hyperparameters) + '\n')
         file.write("Best Score: " + str(best_score) + '\n')
