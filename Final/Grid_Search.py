@@ -64,7 +64,8 @@ def create_model(opt,lr,beta_1,beta_2):
     model.compile(loss="categorical_crossentropy", optimizer=optimizer, metrics=["accuracy"])
     return model
 
-for i in range(5):
+i = 3
+while i < 5:
     model = KerasClassifier(build_fn=create_model)
 
     # Create a GridSearchCV object
@@ -80,6 +81,7 @@ for i in range(5):
 
     df = pd.DataFrame.from_dict(grid_search.cv_results_)
     df.to_csv(f'grid_search_{i}_df.csv')
+    i+=1
 
 """print(df)
 plt.plot(df['mean_train_score'])

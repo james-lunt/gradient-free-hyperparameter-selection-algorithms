@@ -128,10 +128,10 @@ if __name__ == "__main__":
     #Best hyperparameters: {"batch_size": 16, "beta_1": 0.727732325422385, "beta_2": 0.6829935115476067, "lr": 0.001, "opt": "adam"}
     space = {
         "epochs": 1,
-        "lr": tune.uniform(0.0008,0.0012),
-        "b1": tune.uniform(0.1, 0.9),
-        "b2": tune.uniform(0.6,0.76),
-        "batch_size": tune.randint(1,32)
+        "lr": tune.uniform(0.0004,0.0016),
+        "b1": tune.uniform(0.3, 0.7),
+        "b2": tune.uniform(0.7,0.999),
+        "batch_size": tune.randint(2,32)
     }
     perturbation_interval = 4
     pbt = PopulationBasedTraining(
@@ -153,7 +153,7 @@ if __name__ == "__main__":
         run_config=air.RunConfig(
             name="pbt_cifar10",
             stop={
-                "mean_accuracy": 0.80,
+                "mean_accuracy": 0.65,
                 "training_iteration": 20,
             },
             checkpoint_config=air.CheckpointConfig(

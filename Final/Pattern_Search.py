@@ -15,6 +15,7 @@ import pandas as pd
 from sklearn.model_selection import GridSearchCV,RandomizedSearchCV
 import json
 import numpy as np
+import time
 
 # Model / data parameters
 num_classes = 10
@@ -67,27 +68,28 @@ def make_grid(batch_size,learning_rates,beta_1,beta_2):
     print(f"CSV file '{filename}' has been created.")"""
 
 def cnn_run(parameter_vector,report_metric):
-    batch_size,lr,beta_1,beta_2 = parameter_vector
-    model = keras.Sequential()
-    model.add(Conv2D(16, (3,3), padding='same', input_shape=x_train.shape[1:],activation='relu'))
-    model.add(Conv2D(16, (3,3), strides=(2,2), padding='same', activation='relu'))
-    model.add(Conv2D(32, (3,3), padding='same', activation='relu'))
-    model.add(Conv2D(32, (3,3), strides=(2,2), padding='same', activation='relu'))
-    model.add(Dropout(0.5))
-    model.add(Flatten())
-    model.add(Dense(num_classes, activation='softmax',kernel_regularizer=regularizers.l1(0.0001)))
-    adam_optimizer = Adam(lr=lr, beta_1=beta_1, beta_2=beta_2)
-    model.compile(loss="categorical_crossentropy", optimizer=adam_optimizer, metrics=["accuracy"])
-    history = model.fit(x_train, y_train, batch_size=batch_size, epochs=5, validation_split=0.1)
-    loss,test_accuracy = model.evaluate(x_test,y_test)
-    #Takes the training accuracy of the last epoch in the iteration
-    train_accuracy = history.history['accuracy'][-1]
-    if report_metric == 'loss':
-        return loss
-    if report_metric == 'test_accuracy':
-        return test_accuracy
-    else:
-        return train_accuracy
+    with tf.device('/GPU:1'):
+        batch_size,lr,beta_1,beta_2 = parameter_vector
+        model = keras.Sequential()
+        model.add(Conv2D(16, (3,3), padding='same', input_shape=x_train.shape[1:],activation='relu'))
+        model.add(Conv2D(16, (3,3), strides=(2,2), padding='same', activation='relu'))
+        model.add(Conv2D(32, (3,3), padding='same', activation='relu'))
+        model.add(Conv2D(32, (3,3), strides=(2,2), padding='same', activation='relu'))
+        model.add(Dropout(0.5))
+        model.add(Flatten())
+        model.add(Dense(num_classes, activation='softmax',kernel_regularizer=regularizers.l1(0.0001)))
+        adam_optimizer = Adam(lr=lr, beta_1=beta_1, beta_2=beta_2)
+        model.compile(loss="categorical_crossentropy", optimizer=adam_optimizer, metrics=["accuracy"])
+        history = model.fit(x_train, y_train, batch_size=batch_size, epochs=5, validation_split=0.1)
+        loss,test_accuracy = model.evaluate(x_test,y_test)
+        #Takes the training accuracy of the last epoch in the iteration
+        train_accuracy = history.history['accuracy'][-1]
+        if report_metric == 'loss':
+            return loss
+        if report_metric == 'test_accuracy':
+            return test_accuracy
+        else:
+            return train_accuracy
 
 #Alpha is the step size, gamma is shrink/grow size    
 def pattern_search_train(grid,grid_size,starting_point, alpha, gamma, num_iter,report_metric, stop_thr):
@@ -164,6 +166,8 @@ def pattern_search_train(grid,grid_size,starting_point, alpha, gamma, num_iter,r
                 if alpha == 0:
                     alpha = 1
                     shrink_count+=1
+                else:
+                    shrink_count=0
                 #What if has shrinked to the max?
                 print("Shrink")
 
@@ -175,24 +179,39 @@ def pattern_search_train(grid,grid_size,starting_point, alpha, gamma, num_iter,r
     return coord, grid[coord[0]][coord[1]], best_score, iteration_accuracies
     
 
-batch_size = [8, 16, 64, 128]
-learning_rates = [1e-5, 1e-4, 1e-3, 1e-2]
-beta_1 = [0.3, 0.6, 0.9]
-beta_2 = [0.333, 0.666, 0.999]
+batch_size = [2,4,6,8,12,16,20,24,28,32]
+learning_rates = [0.004,0.0008,0.001,0.0012,0.0016]
+beta_1 = [0.3,0.4,0.5,0.6,0.7]
+beta_2 = [0.7, 0.742, 0.784, 0.826, 0.867, 0.908, 0.95, 0.999]
 
-grid,grid_size = make_grid(batch_size,learning_rates,beta_1,beta_2)
-coord, hyperparameters, best_score, iteration_scores = pattern_search_train(
-    grid,grid_size,
-    [3,7],
-     alpha=2,
-     gamma=1,
-     num_iter=5,
-     report_metric='test_accuracy',
-     stop_thr=2
-     )
+i = 1
+while i < 3:
+    grid,grid_size = make_grid(batch_size,learning_rates,beta_1,beta_2)
+    start_time = time.time()
+    coord, hyperparameters, best_score, iteration_scores = pattern_search_train(
+        grid,grid_size,
+        [23,22],
+        alpha=12,
+        gamma=3,
+        num_iter=20,
+        report_metric='test_accuracy',
+        stop_thr=3
+        )
+    end_time = time.time()
+    elapsed_time = end_time - start_time
+    hours = int(elapsed_time // 3600)
+    minutes = int((elapsed_time % 3600) // 60)
+    seconds = int(elapsed_time % 60)
 
-print(coord)
-print(hyperparameters)
-print(best_score)
-print(iteration_scores)
+
+    with open(f'ps_data_{i}.txt', 'w') as file:
+        file.write("Coords: " + str(coord)+ '\n')
+        file.write("Hyperparameters: " + str(hyperparameters) + '\n')
+        file.write("Best Score: " + str(best_score) + '\n')
+        file.write("Iteration Scores: " + str(iteration_scores) + '\n')
+        file.write(f"Elapsed time: {str(hours)} hr {str(minutes)} min {str(seconds)} sec")
+
+    i+=1
+
+
 

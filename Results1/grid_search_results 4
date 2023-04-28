@@ -1,4 +1,4 @@
-Experiment 1
+Experiment 4
 Best hyperparameters: {"batch_size": 8, "beta_1": 0.3, "beta_2": 0.999, "lr": 0.001, "opt": "adam"}
 Best validation accuracy: 0.47
-Test set accuracy: 0.46
+Test set accuracy: 0.49
